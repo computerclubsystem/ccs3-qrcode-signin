@@ -1,0 +1,75 @@
+<div class="ccs3-qrcode-signin-app-wrapper ccs3-qr-font-size-one-and-a-half">
+  <nav class="ccs3-qr-nav-container">
+  </nav>
+  <main class="ccs3-qr-main-container ccs3-qr-flex-column ccs3-qr-align-items-center">
+    <section class="ccs3-qr-align-items-center">
+      <h2>Ccs3</h2>
+      <h2>QR code sign in</h2>
+    </section>
+    @if (signals.signInCodeMissing()) {
+    <section class="sign-in-code-missing-error">
+      <section class="ccs3-qr-error-container ccs3-qr-full-width">
+        <span>Invalid Url. Sign in code parameter is missing</span>
+      </section>
+    </section>
+    }
+    @if (signals.showAccountSelection()) {
+    <section class="accounts-form ccs3-qr-flex-column">
+      @let accounts = signals.accounts();
+      <form [formGroup]="accountsForm">
+        <section class="ccs3-qr-flex-column ccs3-qr-double-gap ccs3-qr-width-small-text">
+          <section class="identifier-input ccs3-qr-input-field">
+            <label>
+              <span>Saved accounts</span>
+              <select [formControl]="accountsForm.controls.account">
+                @for (accountItem of accounts; track accountItem.token) {
+                <option [value]="accountItem">
+                  <span>{{accountItem.identifier}}</span>
+                </option>
+                }
+              </select>
+            </label>
+          </section>
+          <section class="sign-in-form-actions ccs3-qr-flex-column">
+            <button (click)="onSignInWithToken()" [disabled]="accountsForm.invalid || accountsForm.disabled"
+              class="ccs3-qr-highlight ccs3-qr-full-width">Sign in</button>
+            <button (click)="onSignInWithNewAccount()" class="ccs3-qr-full-width">New account</button>
+          </section>
+        </section>
+      </form>
+    </section>
+    }
+    @if (signals.showSignInForm()) {
+    <section class="sign-in-form">
+      <form [formGroup]="signInForm">
+        <section class="ccs3-qr-flex-column ccs3-qr-double-gap ccs3-qr-width-small-text">
+          <section class="identifier-input ccs3-qr-input-field">
+            <label>
+              <span>Identifier (customer card number or username)</span>
+              <input [formControl]="signInForm.controls.identifier" name="identifier" />
+            </label>
+          </section>
+          <section class="password-input ccs3-qr-input-field">
+            <label>
+              <span>Password</span>
+              <input [formControl]="signInForm.controls.password" type="password" name="password" />
+            </label>
+          </section>
+          @let signInErrorText = signals.signInErrorText();
+          @if (signInErrorText) {
+          <section class="sign-in-error">
+            <section class="ccs3-qr-error-container ccs3-qr-full-width">
+              <span>{{signInErrorText}}</span>
+            </section>
+          </section>
+          }
+          <section class="sign-in-form-actions ccs3-qr-flex-row">
+            <button (click)="onSignInWithCredentials()" [disabled]="signInForm.invalid || signInForm.disabled"
+              class="ccs3-qr-highlight ccs3-qr-full-width">Sign in</button>
+          </section>
+        </section>
+      </form>
+    </section>
+    }
+  </main>
+</div>
