@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { ApiCredentialsSignInRequestBody, ApiCredentialsSignInResponseBody } from './api-declarations';
+
+import { ApiCodeSignInIdentifierType, ApiCredentialsSignInRequestBody, ApiCredentialsSignInResponseBody, ApiTokenSignInRequestBody, ApiTokenSignInResponseBody } from './api-declarations';
 
 @Injectable({
   providedIn: 'root'
@@ -7,12 +8,24 @@ import { ApiCredentialsSignInRequestBody, ApiCredentialsSignInResponseBody } fro
 export class ApiService {
   private readonly apiUrlPrefix = '/api/';
 
-  async signInWithCredentials(identifier: string, passwordHash: string, code: string): Promise<ApiCredentialsSignInResponseBody> {
+  async codeSignInWithToken(token: string, code: string, identifierType: ApiCodeSignInIdentifierType): Promise<ApiTokenSignInResponseBody> {
+    const path = this.getApiPath('token-sign-in');
+    const body: ApiTokenSignInRequestBody = {
+      token: token,
+      code: code,
+      identifierType: identifierType,
+    };
+    const res = await this.apiPost<ApiTokenSignInResponseBody>(path, body);
+    return res;
+  }
+
+  async codeSignInWithCredentials(identifier: string, passwordHash: string, code: string, identifierType: ApiCodeSignInIdentifierType): Promise<ApiCredentialsSignInResponseBody> {
     const path = this.getApiPath('credentials-sign-in');
     const body: ApiCredentialsSignInRequestBody = {
       identifier: identifier,
       passwordHash: passwordHash,
       code: code,
+      identifierType: identifierType,
     };
     const res = await this.apiPost<ApiCredentialsSignInResponseBody>(path, body);
     return res;

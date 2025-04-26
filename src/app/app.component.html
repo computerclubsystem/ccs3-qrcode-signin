@@ -23,17 +23,25 @@
               <span>Saved accounts</span>
               <select [formControl]="accountsForm.controls.account">
                 @for (accountItem of accounts; track accountItem.token) {
-                <option [value]="accountItem">
+                <option [ngValue]="accountItem">
                   <span>{{accountItem.identifier}}</span>
                 </option>
                 }
               </select>
             </label>
           </section>
+          @let tokenSignInErrorText = signals.tokenSignInErrorText();
+          @if (tokenSignInErrorText) {
+          <section class="sign-in-error">
+            <section class="ccs3-qr-error-container ccs3-qr-full-width">
+              <span>{{tokenSignInErrorText}}</span>
+            </section>
+          </section>
+          }
           <section class="sign-in-form-actions ccs3-qr-flex-column">
             <button (click)="onSignInWithToken()" [disabled]="accountsForm.invalid || accountsForm.disabled"
               class="ccs3-qr-highlight ccs3-qr-full-width">Sign in</button>
-            <button (click)="onSignInWithNewAccount()" class="ccs3-qr-full-width">New account</button>
+            <button (click)="onUseNewAccount()" class="ccs3-qr-full-width">New account</button>
           </section>
         </section>
       </form>
@@ -55,11 +63,11 @@
               <input [formControl]="signInForm.controls.password" type="password" name="password" />
             </label>
           </section>
-          @let signInErrorText = signals.signInErrorText();
-          @if (signInErrorText) {
+          @let credentialsSignInErrorText = signals.credentialsSignInErrorText();
+          @if (credentialsSignInErrorText) {
           <section class="sign-in-error">
             <section class="ccs3-qr-error-container ccs3-qr-full-width">
-              <span>{{signInErrorText}}</span>
+              <span>{{credentialsSignInErrorText}}</span>
             </section>
           </section>
           }
