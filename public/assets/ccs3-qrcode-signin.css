@@ -277,6 +277,12 @@ button[disabled] {
   padding: var(--ccs3-qr-padding);
 }
 
+.ccs3-qr-success-container {
+  color: var(--ccs3-qr-notification-success-color);
+  background-color: var(--ccs3-qr-notification-success-background-color);
+  padding: var(--ccs3-qr-padding);
+}
+
 /* Themes */
 .ccs3-qr-dark-theme,
 .ccs3-qr-dark-theme input,

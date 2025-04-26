@@ -1,12 +1,18 @@
 import { Injectable } from '@angular/core';
 
-import { ApiCodeSignInIdentifierType, ApiCredentialsSignInRequestBody, ApiCredentialsSignInResponseBody, ApiTokenSignInRequestBody, ApiTokenSignInResponseBody } from './api-declarations';
+import { ApiCodeSignInIdentifierType, ApiCredentialsSignInRequestBody, ApiCredentialsSignInResponseBody, ApiGetSignInCodeInfoRequestBody, ApiGetSignInCodeInfoResponseBody, ApiTokenSignInRequestBody, ApiTokenSignInResponseBody } from './api-declarations';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
   private readonly apiUrlPrefix = '/api/';
+
+  async getSignInCodeInfo(requestBody: ApiGetSignInCodeInfoRequestBody): Promise<ApiGetSignInCodeInfoResponseBody> {
+    const path = this.getApiPath('sign-in-code-info');
+    const res = await this.apiPost<ApiGetSignInCodeInfoResponseBody>(path, requestBody);
+    return res;
+  }
 
   async codeSignInWithToken(token: string, code: string, identifierType: ApiCodeSignInIdentifierType): Promise<ApiTokenSignInResponseBody> {
     const path = this.getApiPath('token-sign-in');

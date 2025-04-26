@@ -1,11 +1,13 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal, WritableSignal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, signal, WritableSignal } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { interval } from 'rxjs';
 
 import { AccountItem } from './declarations';
 import { StorageService } from './storage.service';
 import { ApiService } from './api.service';
 import { HashService } from './hash.service';
-import { ApiCodeSignInIdentifierType } from './api-declarations';
+import { ApiCodeSignInIdentifierType, ApiGetSignInCodeInfoRequestBody } from './api-declarations';
 
 @Component({
   selector: 'ccs3-qr-app-root',
@@ -22,11 +24,14 @@ export class AppComponent implements OnInit {
   private readonly storageSvc = inject(StorageService);
   private readonly apiSvc = inject(ApiService);
   private readonly hashSvc = inject(HashService);
+  private readonly destroyRef = inject(DestroyRef);
+  private codeExpiresAt?: number;
 
   ngOnInit(): void {
     const urlSearchParams = this.getUrlSearchParams();
     this.signals.urlSearchParams.set(urlSearchParams);
-    if (urlSearchParams) {
+    if (urlSearchParams && urlSearchParams.code && urlSearchParams.identifierType) {
+      this.processCodeInfo(urlSearchParams);
       const accounts = this.storageSvc.getStoredAccounts();
       this.signals.accounts.set(accounts);
       if (accounts.length === 1) {
@@ -42,16 +47,46 @@ export class AppComponent implements OnInit {
     }
   }
 
+  async processCodeInfo(urlSearchParams: CodeSignInUrlSeachParams): Promise<void> {
+    const req: ApiGetSignInCodeInfoRequestBody = {
+      code: urlSearchParams.code!,
+      identifierType: urlSearchParams.identifierType as ApiCodeSignInIdentifierType,
+    };
+    const res = await this.apiSvc.getSignInCodeInfo(req);
+    if (res.isValid) {
+      this.codeExpiresAt = Date.now() + (res.expiresInSeconds || 0) * 1000;
+      interval(1000).pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe(() => this.showCodeRemainingTime());
+    } else {
+      this.signals.codeIsNotValid.set(true);
+    }
+  }
+
+  showCodeRemainingTime(): void {
+    if (this.signals.signedIn()) {
+      return;
+    }
+    const remainingSeconds = Math.floor((this.codeExpiresAt! - Date.now()) / 1000);
+    if (remainingSeconds <= 0) {
+      this.signals.codeIsNotValid.set(true);
+      this.signals.codeRemainingSeconds.set(null);
+    } else {
+      this.signals.codeRemainingSeconds.set(remainingSeconds);
+    }
+  }
+
   async onSignInWithToken(): Promise<void> {
     try {
       this.signals.tokenSignInErrorText.set(null);
+      this.signals.signedIn.set(false);
       this.changeAccountFormEnabledState(false);
       const formValue = this.accountsForm.value;
       const accountItem = formValue.account!;
       const urlSearchParams = this.signals.urlSearchParams()!;
-      const res = await this.apiSvc.codeSignInWithToken(accountItem.token, urlSearchParams.signInCode!, urlSearchParams.identifierType! as ApiCodeSignInIdentifierType);
+      const res = await this.apiSvc.codeSignInWithToken(accountItem.token, urlSearchParams.code!, urlSearchParams.identifierType! as ApiCodeSignInIdentifierType);
       if (res.success) {
-        // TODO: Show success to the user
+        this.signals.signedIn.set(true);
       } else {
         this.signals.tokenSignInErrorText.set(res.errorMessage || `Can't sign in`);
       }
@@ -74,7 +109,7 @@ export class AppComponent implements OnInit {
       const passwordHash = await this.hashSvc.getSha512(formValue.password!);
       const identifier = formValue.identifier?.trim()!;
       const urlSearchParams = this.signals.urlSearchParams()!;
-      const res = await this.apiSvc.codeSignInWithCredentials(identifier, passwordHash, urlSearchParams.signInCode!, urlSearchParams.identifierType! as ApiCodeSignInIdentifierType);
+      const res = await this.apiSvc.codeSignInWithCredentials(identifier, passwordHash, urlSearchParams.code!, urlSearchParams.identifierType! as ApiCodeSignInIdentifierType);
       if (res.success) {
         // Add/update account item in the local storage
         const accounts = this.signals.accounts();
@@ -102,11 +137,9 @@ export class AppComponent implements OnInit {
 
   getUrlSearchParams(): CodeSignInUrlSeachParams {
     const url = URL.parse(location.href)!;
-    const validTo = url.searchParams.get(UrlSearchParameterName.validTo);
     const result: CodeSignInUrlSeachParams = {
       identifierType: url.searchParams.get(UrlSearchParameterName.identifierType),
-      signInCode: url.searchParams.get(UrlSearchParameterName.signInCode),
-      validTo: validTo ? +validTo : null,
+      code: url.searchParams.get(UrlSearchParameterName.signInCode),
     };
     return result;
   }
@@ -157,6 +190,9 @@ export class AppComponent implements OnInit {
       signInCodeMissing: signal(false),
       signInFormDisabled: signal(false),
       accountsFormDisabled: signal(false),
+      codeIsNotValid: signal(false),
+      codeRemainingSeconds: signal(null),
+      signedIn: signal(false),
     };
     return signals;
   }
@@ -172,6 +208,9 @@ interface Signals {
   signInCodeMissing: WritableSignal<boolean>;
   signInFormDisabled: WritableSignal<boolean>;
   accountsFormDisabled: WritableSignal<boolean>;
+  codeIsNotValid: WritableSignal<boolean>;
+  codeRemainingSeconds: WritableSignal<number | null>;
+  signedIn: WritableSignal<boolean>;
 }
 
 interface SignInFormControls {
@@ -186,11 +225,9 @@ interface AccountsFormControls {
 const enum UrlSearchParameterName {
   signInCode = 'sign-in-code',
   identifierType = 'identifier-type',
-  validTo = 'valid-to',
 }
 
 interface CodeSignInUrlSeachParams {
-  signInCode: string | null;
+  code: string | null;
   identifierType: string | null;
-  validTo: number | null;
 }

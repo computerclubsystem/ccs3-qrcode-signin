@@ -6,10 +6,24 @@
       <h2>Ccs3</h2>
       <h2>QR code sign in</h2>
     </section>
+    @if (signals.signedIn()) {
+    <section class="signed-in">
+      <section class="ccs3-qr-success-container ccs3-qr-full-width">
+        <span>Successfully signed in</span>
+      </section>
+    </section>
+    } @else {
     @if (signals.signInCodeMissing()) {
     <section class="sign-in-code-missing-error">
       <section class="ccs3-qr-error-container ccs3-qr-full-width">
         <span>Invalid Url. Sign in code parameter is missing</span>
+      </section>
+    </section>
+    }
+    @if (signals.codeIsNotValid()) {
+    <section class="sign-in-code-missing-error">
+      <section class="ccs3-qr-error-container ccs3-qr-full-width">
+        <span>The code is invalid or expired</span>
       </section>
     </section>
     }
@@ -41,6 +55,12 @@
           <section class="sign-in-form-actions ccs3-qr-flex-column">
             <button (click)="onSignInWithToken()" [disabled]="accountsForm.invalid || accountsForm.disabled"
               class="ccs3-qr-highlight ccs3-qr-full-width">Sign in</button>
+            @let remainingSeconds = signals.codeRemainingSeconds();
+            @if (remainingSeconds !== null && remainingSeconds > 0) {
+            <section class="ccs3-qr-flex-row">
+              <span>Remaining seconds</span><span>{{remainingSeconds}}</span>
+            </section>
+            }
             <button (click)="onUseNewAccount()" class="ccs3-qr-full-width">New account</button>
           </section>
         </section>
@@ -78,6 +98,7 @@
         </section>
       </form>
     </section>
+    }
     }
   </main>
 </div>
