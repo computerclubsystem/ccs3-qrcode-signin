@@ -253,7 +253,8 @@
   gap: 0;
 }
 
-.ccs3-qr-input-field > label > input {
+.ccs3-qr-input-field > label > input,
+.ccs3-qr-input-field select {
   padding-inline: var(--ccs3-qr-half-padding);
   padding-block: var(--ccs3-qr-half-padding);
 }

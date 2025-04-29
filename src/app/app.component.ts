@@ -54,7 +54,7 @@ export class AppComponent implements OnInit {
     };
     const res = await this.apiSvc.getSignInCodeInfo(req);
     if (res.isValid) {
-      this.codeExpiresAt = Date.now() + (res.expiresInSeconds || 0) * 1000;
+      this.codeExpiresAt = Date.now() + (res.remainingSeconds || 0) * 1000;
       interval(1000).pipe(
         takeUntilDestroyed(this.destroyRef)
       ).subscribe(() => this.showCodeRemainingTime());
