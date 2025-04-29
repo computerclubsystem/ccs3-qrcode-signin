@@ -104,6 +104,7 @@ export class AppComponent implements OnInit {
   async onSignInWithCredentials(): Promise<void> {
     try {
       this.signals.credentialsSignInErrorText.set(null);
+      this.signals.signedIn.set(false);
       this.changeSignInFormEnabledState(false);
       const formValue = this.signInForm.value;
       const passwordHash = await this.hashSvc.getSha512(formValue.password!);
@@ -112,6 +113,7 @@ export class AppComponent implements OnInit {
       const res = await this.apiSvc.codeSignInWithCredentials(identifier, passwordHash, urlSearchParams.code!, urlSearchParams.identifierType! as ApiCodeSignInIdentifierType);
       if (res.success) {
         // Add/update account item in the local storage
+        this.signals.signedIn.set(true);
         const accounts = this.signals.accounts();
         const existingAccount = accounts.find(x => x.identifier === res.identifier && x.identifierType === res.identifierType);
         if (existingAccount) {
