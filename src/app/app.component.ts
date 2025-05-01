@@ -8,11 +8,12 @@ import { StorageService } from './storage.service';
 import { ApiService } from './api.service';
 import { HashService } from './hash.service';
 import { ApiCodeSignInIdentifierType, ApiGetSignInCodeInfoRequestBody } from './api-declarations';
+import { RemainingSecondsComponent } from './remaining-seconds/remaining-seconds.component';
 
 @Component({
   selector: 'ccs3-qr-app-root',
   templateUrl: './app.component.html',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RemainingSecondsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent implements OnInit {
@@ -54,7 +55,9 @@ export class AppComponent implements OnInit {
     };
     const res = await this.apiSvc.getSignInCodeInfo(req);
     if (res.isValid) {
+      this.signals.codeDurationSeconds.set(res.codeDurationSeconds);
       this.codeExpiresAt = Date.now() + (res.remainingSeconds || 0) * 1000;
+      this.showCodeRemainingTime();
       interval(1000).pipe(
         takeUntilDestroyed(this.destroyRef)
       ).subscribe(() => this.showCodeRemainingTime());
@@ -194,6 +197,7 @@ export class AppComponent implements OnInit {
       accountsFormDisabled: signal(false),
       codeIsNotValid: signal(false),
       codeRemainingSeconds: signal(null),
+      codeDurationSeconds: signal(0),
       signedIn: signal(false),
     };
     return signals;
@@ -212,6 +216,7 @@ interface Signals {
   accountsFormDisabled: WritableSignal<boolean>;
   codeIsNotValid: WritableSignal<boolean>;
   codeRemainingSeconds: WritableSignal<number | null>;
+  codeDurationSeconds: WritableSignal<number>;
   signedIn: WritableSignal<boolean>;
 }
 

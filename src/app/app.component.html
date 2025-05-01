@@ -2,6 +2,7 @@
   <nav class="ccs3-qr-nav-container">
   </nav>
   <main class="ccs3-qr-main-container ccs3-qr-flex-column ccs3-qr-align-items-center">
+    @let remainingSeconds = signals.codeRemainingSeconds();
     <section class="ccs3-qr-align-items-center">
       <h2>Ccs3 QR code sign in</h2>
     </section>
@@ -12,6 +13,10 @@
       </section>
     </section>
     } @else {
+    @if (remainingSeconds !== null && remainingSeconds > 0) {
+    <ccs3-qr-remaining-seconds [remainingSeconds]="remainingSeconds" [maxValue]="signals.codeDurationSeconds()"
+      class="ccs3-qr-width-small-text"></ccs3-qr-remaining-seconds>
+    }
     @if (signals.signInCodeMissing()) {
     <section class="sign-in-code-missing-error">
       <section class="ccs3-qr-error-container ccs3-qr-full-width">
@@ -60,12 +65,6 @@
       </form>
     </section>
     }
-    @let remainingSeconds = signals.codeRemainingSeconds();
-    @if (remainingSeconds !== null && remainingSeconds > 0) {
-    <section class="ccs3-qr-flex-row">
-      <span>Remaining seconds</span><span>{{remainingSeconds}}</span>
-    </section>
-    }
     @if (signals.showSignInForm()) {
     <section class="sign-in-form">
       <form [formGroup]="signInForm">
@@ -90,7 +89,11 @@
             </section>
           </section>
           }
-          <section class="sign-in-form-actions ccs3-qr-flex-row">
+          @if (remainingSeconds !== null && remainingSeconds > 0) {
+          <ccs3-qr-remaining-seconds [remainingSeconds]="remainingSeconds" [maxValue]="signals.codeDurationSeconds()"
+            class="ccs3-qr-width-small-text"></ccs3-qr-remaining-seconds>
+          }
+          <section class="sign-in-form-actions ccs3-qr-flex-column">
             <button (click)="onSignInWithCredentials()" [disabled]="signInForm.invalid || signInForm.disabled"
               class="ccs3-qr-highlight ccs3-qr-full-width">Sign in</button>
           </section>

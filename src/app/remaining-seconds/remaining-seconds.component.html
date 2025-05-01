@@ -1,0 +1,9 @@
+@let seconds = remainingSeconds();
+@if (seconds !== null && seconds > 0) {
+<section class="remaining-seconds">
+  <label class="ccs3-qr-flex-row ccs3-qr-flex-no-wrap">
+    <span>{{seconds}}</span>
+    <progress [value]="seconds" [max]="maxValue()">{{seconds}}</progress>
+  </label>
+</section>
+}

@@ -21,6 +21,7 @@ export interface ApiGetSignInCodeInfoResponseBody {
   code: string;
   identifierType: ApiCodeSignInIdentifierType;
   isValid: boolean;
+  codeDurationSeconds: number;
   remainingSeconds?: number | null;
 }
 
