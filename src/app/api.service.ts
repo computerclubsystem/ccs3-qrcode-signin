@@ -1,12 +1,18 @@
 import { Injectable } from '@angular/core';
 
-import { ApiCodeSignInIdentifierType, ApiCredentialsSignInRequestBody, ApiCredentialsSignInResponseBody, ApiGetSignInCodeInfoRequestBody, ApiGetSignInCodeInfoResponseBody, ApiTokenSignInRequestBody, ApiTokenSignInResponseBody } from './api-declarations';
+import { ApiChangePasswordWithTokenRequestBody, ApiChangePasswordWithTokenResponseBody, ApiCodeSignInIdentifierType, ApiCredentialsSignInRequestBody, ApiCredentialsSignInResponseBody, ApiGetSignInCodeInfoRequestBody, ApiGetSignInCodeInfoResponseBody, ApiTokenSignInRequestBody, ApiTokenSignInResponseBody } from './api-declarations';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
   private readonly apiUrlPrefix = '/api/';
+
+  async changePasswordWithToken(requestBody: ApiChangePasswordWithTokenRequestBody): Promise<ApiChangePasswordWithTokenResponseBody> {
+    const path = this.getApiPath('change-password-with-token');
+    const res = await this.apiPost<ApiChangePasswordWithTokenResponseBody>(path, requestBody);
+    return res;
+  }
 
   async getSignInCodeInfo(requestBody: ApiGetSignInCodeInfoRequestBody): Promise<ApiGetSignInCodeInfoResponseBody> {
     const path = this.getApiPath('sign-in-code-info');

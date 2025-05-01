@@ -61,9 +61,49 @@
             </section>
           </section>
           }
-          <section class="sign-in-form-actions ccs3-qr-flex-column">
+          <section class="sign-in-form-actions ccs3-qr-flex-column ccs3-qr-double-gap">
             <button (click)="onSignInWithToken()" [disabled]="accountsForm.invalid || accountsForm.disabled"
               class="ccs3-qr-highlight ccs3-qr-full-width">Sign in</button>
+            @if (accountsForm.controls.account.value) {
+            <section class="change-password ccs3-qr-input-field">
+              <label>
+                <span>Change '{{accountsForm.controls.account.value.identifier}}' password</span>
+                <input [formControl]="accountsForm.controls.changePassword" type="checkbox" name="change-password" />
+              </label>
+            </section>
+            }
+            @if (accountsForm.controls.changePassword.value) {
+            <section class="ccs3-qr-flex-column">
+              <section class="new-password-input ccs3-qr-input-field ccs3-qr-width-small-text">
+                <label>
+                  <span>New password (minimum 10 characters)</span>
+                  <input [formControl]="accountsForm.controls.newPassword" type="password" name="new-password"
+                    autocomplete="new-password" />
+                </label>
+              </section>
+              <section class="new-password-input ccs3-qr-input-field ccs3-qr-width-small-text">
+                <label>
+                  <span>Confirm new password</span>
+                  <input [formControl]="accountsForm.controls.repeatNewPassword" type="password" name="new-password"
+                    autocomplete="new-password" />
+                </label>
+              </section>
+              @let changePasswordResponseMessage = signals.changePasswordResponseMessage();
+              @if (changePasswordResponseMessage) {
+              @if (signals.changePasswordSuccess()) {
+              <section class="ccs3-qr-success-container ccs3-qr-full-width">
+                <span>{{changePasswordResponseMessage}}</span>
+              </section>
+              } @else {
+              <section class="ccs3-qr-error-container ccs3-qr-full-width">
+                <span>{{changePasswordResponseMessage}}</span>
+              </section>
+              }
+              }
+              <button (click)="onChangePassword()" [disabled]="!signals.changePasswordEnabled()"
+                class="ccs3-qr-highlight ccs3-qr-full-width">Change password</button>
+            </section>
+            }
             <button (click)="onUseNewAccount()" class="ccs3-qr-full-width">New account</button>
           </section>
         </section>
@@ -83,7 +123,8 @@
           <section class="password-input ccs3-qr-input-field">
             <label>
               <span>Password</span>
-              <input [formControl]="signInForm.controls.password" type="password" name="password" />
+              <input [formControl]="signInForm.controls.password" type="password" name="password"
+                autocomplete="current-password" />
             </label>
           </section>
           @let credentialsSignInErrorText = signals.credentialsSignInErrorText();

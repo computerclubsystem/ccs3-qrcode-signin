@@ -11,6 +11,25 @@ export const enum ApiCodeSignInErrorCode {
   serverError = 'server-error',
 }
 
+export const enum ApiChangePasswordWithTokenErrorCode {
+  invalidToken = 'invalid-token',
+  serverError = 'server-error',
+}
+
+
+// Change account password
+export interface ApiChangePasswordWithTokenRequestBody {
+  token: string;
+  passwordHash: string;
+}
+
+export interface ApiChangePasswordWithTokenResponseBody {
+  success: boolean;
+  errorMessage?: string | null;
+  errorCode?: ApiChangePasswordWithTokenErrorCode | null;
+}
+
+
 // Code info
 export interface ApiGetSignInCodeInfoRequestBody {
   code: string;

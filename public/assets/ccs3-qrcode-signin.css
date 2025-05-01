@@ -247,13 +247,13 @@
   flex-direction: column;
 }
 
-.ccs3-qr-input-field > label {
+.ccs3-qr-input-field label {
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
-.ccs3-qr-input-field > label > input,
+.ccs3-qr-input-field label input,
 .ccs3-qr-input-field select {
   padding-inline: var(--ccs3-qr-half-padding);
   padding-block: var(--ccs3-qr-half-padding);
@@ -264,6 +264,18 @@
 {
   border-color: var(--ccs3-qr-notification-error-background-color);
   border-width: 2px;
+}
+
+.ccs3-qr-input-field label:has(input[type='checkbox']) {
+  display: flex;
+  flex-direction: row-reverse;
+  gap: var(--ccs3-qr-gap);
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.ccs3-qr-input-field input[type='checkbox'] {
+  scale: 2;
 }
 
 button[disabled] {

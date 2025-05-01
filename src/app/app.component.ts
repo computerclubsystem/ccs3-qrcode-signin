@@ -7,7 +7,7 @@ import { AccountItem } from './declarations';
 import { StorageService } from './storage.service';
 import { ApiService } from './api.service';
 import { HashService } from './hash.service';
-import { ApiCodeSignInIdentifierType, ApiGetSignInCodeInfoRequestBody } from './api-declarations';
+import { ApiChangePasswordWithTokenRequestBody, ApiCodeSignInIdentifierType, ApiGetSignInCodeInfoRequestBody } from './api-declarations';
 import { RemainingSecondsComponent } from './remaining-seconds/remaining-seconds.component';
 
 @Component({
@@ -47,6 +47,43 @@ export class AppComponent implements OnInit {
       this.signals.showAccountSelection.set(hasStoredAccounts);
     } else {
       this.signals.signInCodeMissing.set(true);
+    }
+    this.subscribeToAccountsForm();
+  }
+
+  subscribeToAccountsForm(): void {
+    this.accountsForm.valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(formValue => this.signals.changePasswordEnabled.set(this.isChangePasswordEnabled(formValue)));
+  }
+
+  isChangePasswordEnabled(formValue: typeof this.accountsForm.value): boolean {
+    const newPassword = formValue.newPassword;
+    const repeatNewPassword = formValue.repeatNewPassword;
+    if (newPassword && newPassword.length >= 10 && repeatNewPassword === newPassword) {
+      return true;
+    }
+    return false;
+  }
+
+  async onChangePassword(): Promise<void> {
+    const requestBody: ApiChangePasswordWithTokenRequestBody = {
+      token: this.accountsForm.controls.account.value?.token!,
+      passwordHash: await this.hashSvc.getSha512(this.accountsForm.controls.newPassword.value!),
+    };
+    try {
+      this.signals.changePasswordResponseMessage.set(null);
+      this.signals.changePasswordSuccess.set(null);
+      const res = await this.apiSvc.changePasswordWithToken(requestBody);
+      this.signals.changePasswordSuccess.set(res.success);
+      if (res.success) {
+        this.signals.changePasswordResponseMessage.set('Password has been changed');
+      } else {
+        this.signals.changePasswordResponseMessage.set(res.errorMessage || `Can't change the password`);
+      }
+    } catch (err) {
+      this.signals.changePasswordSuccess.set(false);
+      this.signals.changePasswordResponseMessage.set(`Can't change the password`);
     }
   }
 
@@ -188,6 +225,9 @@ export class AppComponent implements OnInit {
   createAccountsForm(): FormGroup<AccountsFormControls> {
     const controls: AccountsFormControls = {
       account: new FormControl(null, { validators: [Validators.required] }),
+      changePassword: new FormControl(null),
+      newPassword: new FormControl(null),
+      repeatNewPassword: new FormControl(null),
     };
     const form = this.formBuilder.group(controls);
     return form;
@@ -217,6 +257,9 @@ export class AppComponent implements OnInit {
       codeRemainingSeconds: signal(null),
       codeDurationSeconds: signal(0),
       signedIn: signal(false),
+      changePasswordResponseMessage: signal(null),
+      changePasswordSuccess: signal(null),
+      changePasswordEnabled: signal(null),
     };
     return signals;
   }
@@ -236,6 +279,9 @@ interface Signals {
   codeRemainingSeconds: WritableSignal<number | null>;
   codeDurationSeconds: WritableSignal<number>;
   signedIn: WritableSignal<boolean>;
+  changePasswordResponseMessage: WritableSignal<string | null>;
+  changePasswordSuccess: WritableSignal<boolean | null>;
+  changePasswordEnabled: WritableSignal<boolean | null>;
 }
 
 interface SignInFormControls {
@@ -245,6 +291,9 @@ interface SignInFormControls {
 
 interface AccountsFormControls {
   account: FormControl<AccountItem | null>;
+  changePassword: FormControl<boolean | null>;
+  newPassword: FormControl<string | null>;
+  repeatNewPassword: FormControl<string | null>;
 }
 
 const enum UrlSearchParameterName {
