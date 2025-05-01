@@ -122,7 +122,8 @@ export class AppComponent implements OnInit {
   }
 
   showCodeRemainingTime(): void {
-    if (this.signals.signedIn()) {
+    if (this.signals.signedIn() || this.signals.codeUsed()) {
+      this.signals.codeRemainingSeconds.set(null);
       return;
     }
     const remainingSeconds = Math.floor((this.codeExpiresAt! - Date.now()) / 1000);
@@ -138,13 +139,18 @@ export class AppComponent implements OnInit {
     try {
       this.signals.tokenSignInErrorText.set(null);
       this.signals.signedIn.set(false);
+      this.signals.signedInIdentifier.set(null);
+      this.signals.codeRemainingSeconds.set(null);
+      this.signals.signingIn.set(true);
       this.changeAccountFormEnabledState(false);
       const formValue = this.accountsForm.value;
       const accountItem = formValue.account!;
       const urlSearchParams = this.signals.urlSearchParams()!;
       const res = await this.apiSvc.codeSignInWithToken(accountItem.token, urlSearchParams.code!, urlSearchParams.identifierType! as ApiCodeSignInIdentifierType);
       if (res.success) {
+        this.signals.signedInIdentifier.set(res.identifier);
         this.signals.signedIn.set(true);
+        this.signals.codeUsed.set(true);
       } else {
         this.signals.tokenSignInErrorText.set(res.errorMessage || `Can't sign in`);
       }
@@ -152,6 +158,7 @@ export class AppComponent implements OnInit {
       this.signals.tokenSignInErrorText.set(`Can't sign in. Verify username and password`);
     } finally {
       this.changeAccountFormEnabledState(true);
+      this.signals.signingIn.set(false);
     }
   }
 
@@ -163,6 +170,9 @@ export class AppComponent implements OnInit {
     try {
       this.signals.credentialsSignInErrorText.set(null);
       this.signals.signedIn.set(false);
+      this.signals.signedInIdentifier.set(null);
+      this.signals.codeRemainingSeconds.set(null);
+      this.signals.signingIn.set(false);
       this.changeSignInFormEnabledState(false);
       const formValue = this.signInForm.value;
       const passwordHash = await this.hashSvc.getSha512(formValue.password!);
@@ -171,7 +181,9 @@ export class AppComponent implements OnInit {
       const res = await this.apiSvc.codeSignInWithCredentials(identifier, passwordHash, urlSearchParams.code!, urlSearchParams.identifierType! as ApiCodeSignInIdentifierType);
       if (res.success) {
         // Add/update account item in the local storage
+        this.signals.codeUsed.set(true);
         this.signals.signedIn.set(true);
+        this.signals.signedInIdentifier.set(res.identifier);
         const accounts = this.signals.accounts();
         const existingAccount = accounts.find(x => x.identifier === res.identifier && x.identifierType === res.identifierType);
         if (existingAccount) {
@@ -185,6 +197,10 @@ export class AppComponent implements OnInit {
         }
         this.signals.accounts.set(accounts);
         this.storageSvc.setAccountItems(accounts);
+        const signedInAccount = accounts.find(x => x.token === res.token);
+        this.accountsForm.controls.account.patchValue(signedInAccount || null)
+        this.signals.showAccountSelection.set(true);
+        this.signals.showSignInForm.set(false);
       } else {
         this.signals.credentialsSignInErrorText.set(res.errorMessage || `Can't sign in`);
       }
@@ -192,6 +208,7 @@ export class AppComponent implements OnInit {
       this.signals.credentialsSignInErrorText.set(`Can't sign in. Verify username and password`);
     } finally {
       this.changeSignInFormEnabledState(true);
+      this.signals.signingIn.set(false);
     }
   }
 
@@ -257,9 +274,12 @@ export class AppComponent implements OnInit {
       codeRemainingSeconds: signal(null),
       codeDurationSeconds: signal(0),
       signedIn: signal(false),
+      signedInIdentifier: signal(null),
       changePasswordResponseMessage: signal(null),
       changePasswordSuccess: signal(null),
       changePasswordEnabled: signal(null),
+      signingIn: signal(false),
+      codeUsed: signal(false),
     };
     return signals;
   }
@@ -279,9 +299,12 @@ interface Signals {
   codeRemainingSeconds: WritableSignal<number | null>;
   codeDurationSeconds: WritableSignal<number>;
   signedIn: WritableSignal<boolean>;
+  signedInIdentifier: WritableSignal<string | undefined | null>;
   changePasswordResponseMessage: WritableSignal<string | null>;
   changePasswordSuccess: WritableSignal<boolean | null>;
   changePasswordEnabled: WritableSignal<boolean | null>;
+  signingIn: WritableSignal<boolean>;
+  codeUsed: WritableSignal<boolean>;
 }
 
 interface SignInFormControls {

@@ -99,6 +99,10 @@
   padding-block: var(--ccs3-qr-padding);
 }
 
+.ccs3-qr-no-margin {
+  margin: 0;
+}
+
 /* Spacing */
 .ccs3-qr-no-gap {
   gap: 0;
@@ -139,6 +143,10 @@
 
 .ccs3-qr-align-text-end {
   text-align: end;
+}
+
+.ccs3-qr-align-text-center {
+  text-align: center;
 }
 
 .ccs3-qr-vertical-align-baseline {
