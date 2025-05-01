@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, signal, WritableSignal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject, OnInit, signal, ViewChild, WritableSignal } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { interval } from 'rxjs';
@@ -21,6 +21,8 @@ export class AppComponent implements OnInit {
   readonly accountsForm = this.createAccountsForm();
   readonly signInForm = this.createSignInForm();
   readonly signals = this.createSignals();
+
+  @ViewChild('accountDeletionConfirmationDialog') accountDeletionConfirmationDialog!: ElementRef<HTMLDialogElement>;
 
   private readonly storageSvc = inject(StorageService);
   private readonly apiSvc = inject(ApiService);
@@ -46,6 +48,22 @@ export class AppComponent implements OnInit {
     } else {
       this.signals.signInCodeMissing.set(true);
     }
+  }
+
+  onShowDeleteAccountDialog(): void {
+    this.accountDeletionConfirmationDialog.nativeElement.showModal();
+  }
+
+  onRemoveSelectedAccount(): void {
+    const account = this.accountsForm.controls.account.value;
+    if (!account) {
+      return;
+    }
+    const currentAccounts = this.storageSvc.getStoredAccounts();
+    const filteredAccounts = currentAccounts.filter(x => x.token !== account.token);
+    this.storageSvc.setAccountItems(filteredAccounts);
+    this.signals.accounts.set(filteredAccounts);
+    this.accountsForm.controls.account.patchValue(null);
   }
 
   async processCodeInfo(urlSearchParams: CodeSignInUrlSeachParams): Promise<void> {

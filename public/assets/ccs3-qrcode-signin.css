@@ -307,6 +307,11 @@ button[disabled] {
   background-color: var(--ccs3-qr-dark-highlight-background-color);
 }
 
+/* Dialog */
+::backdrop {
+  background-color: #000000;
+  opacity: 0.75;
+}
 
 /* HTML Elements */
 * {

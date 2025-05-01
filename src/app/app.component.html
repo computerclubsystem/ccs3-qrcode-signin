@@ -39,13 +39,18 @@
           <section class="identifier-input ccs3-qr-input-field">
             <label>
               <span>Saved accounts</span>
-              <select [formControl]="accountsForm.controls.account">
-                @for (accountItem of accounts; track accountItem.token) {
-                <option [ngValue]="accountItem">
-                  <span>{{accountItem.identifier}}</span>
-                </option>
+              <section class="ccs3-qr-flex-row">
+                <select [formControl]="accountsForm.controls.account" class="ccs3-qr-flex-grow">
+                  @for (accountItem of accounts; track accountItem.token) {
+                  <option [ngValue]="accountItem">
+                    <span>{{accountItem.identifier}}</span>
+                  </option>
+                  }
+                </select>
+                @if (accountsForm.controls.account.value) {
+                <button (click)="onShowDeleteAccountDialog()">&#x2573;</button>
                 }
-              </select>
+              </section>
             </label>
           </section>
           @let tokenSignInErrorText = signals.tokenSignInErrorText();
@@ -104,3 +109,11 @@
     }
   </main>
 </div>
+
+<dialog #accountDeletionConfirmationDialog>
+  <p>Do you want to remove {{accountsForm.controls.account.value?.identifier}} ?</p>
+  <form method="dialog" class="ccs3-qr-flex-row">
+    <button (click)="onRemoveSelectedAccount()">Remove</button>
+    <button>Cancel</button>
+  </form>
+</dialog>
