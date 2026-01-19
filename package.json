@@ -1,11 +1,11 @@
 {
   "name": "ccs3-qrcode-signin",
-  "version": "3.1.10",
+  "version": "3.1.11",
   "scripts": {
     "ng": "ng",
     "start": "ng serve --no-live-reload",
     "build": "ng build --source-map",
-    "build-image": "docker buildx build -t computerclubsystem/qrcode-signin-web-app-static-files:dev -f devops/Dockerfile .",
+    "build-image": "docker buildx build --load -t computerclubsystem/qrcode-signin-web-app-static-files:dev -f devops/Dockerfile .",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "update-version": "npm version --allow-same-version --no-git-tag-version --include-workspace-root --workspaces"
